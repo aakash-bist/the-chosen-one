@@ -1,6 +1,6 @@
 import { Pointer } from "lucide-react";
 import React, { useEffect, useRef, useState, type JSX } from "react";
-import { loadSounds, playSound } from "./utils/soundManager";
+import { playSound } from "./utils/soundManager";
 
 type Finger = {
   id: number;
