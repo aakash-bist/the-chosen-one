@@ -24,6 +24,13 @@ function randomUniqueColor(existing: Set<string>) {
   return `hsl(${Math.floor(Math.random() * 360)} 75% 50%)`;
 }
 
+// 🔊 Play sound helper
+function playSound(src: string) {
+  const audio = new Audio(src);
+  audio.volume = 0.5;
+  audio.play().catch(() => {});
+}
+
 export default function FingerPickerGame(): JSX.Element {
   const [fingers, setFingers] = useState<Map<number, Finger>>(new Map());
   const [winnerId, setWinnerId] = useState<number | null>(null);
@@ -41,6 +48,7 @@ export default function FingerPickerGame(): JSX.Element {
       } else {
         const color = randomUniqueColor(existing);
         next.set(id, { id, x: clientX, y: clientY, color, createdAt: Date.now() });
+        playSound("/sounds/add.mp3");  // 🔊 finger added
       }
       return next;
     });
@@ -48,8 +56,10 @@ export default function FingerPickerGame(): JSX.Element {
 
   function removeFinger(id: number) {
     setFingers(prev => {
+      if (!prev.has(id)) return prev;
       const next = new Map(prev);
       next.delete(id);
+      if (next.size > 0) playSound("/sounds/remove.mp3");  // 🔊 finger removed
       return next;
     });
   }
@@ -78,11 +88,16 @@ export default function FingerPickerGame(): JSX.Element {
         const next = new Map(prev);
         next.delete(loserId);
 
+        if (next.size > 0) playSound("/sounds/remove.mp3"); // 🔊 eliminated
+
         if (next.size === 1) {
           const [finalId] = next.keys();
           setWinnerId(finalId);
-          // const f = next.get(finalId);
-          // if (f) setBgColor(f.color);
+          const f = next.get(finalId);
+          if (f) {
+            playSound("/sounds/win.mp3"); // 🔊 winner
+            // setBgColor(f.color);
+          }
         }
 
         return next;
@@ -134,6 +149,7 @@ export default function FingerPickerGame(): JSX.Element {
         eliminationTimerRef.current = null;
       }
       if (fingers.size === 0) {
+        playSound("/sounds/win.mp3"); // 🔊 winner (single player)
         setWinnerId(null);
         setBgColor(DEFAULT_BG);
       }
