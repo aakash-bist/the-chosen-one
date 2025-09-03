@@ -1,5 +1,6 @@
 import { Pointer } from "lucide-react";
 import React, { useEffect, useRef, useState, type JSX } from "react";
+import { loadSounds, playSound } from "./utils/soundManager";
 
 type Finger = {
   id: number;
@@ -22,24 +23,6 @@ function randomUniqueColor(existing: Set<string>) {
     if (!existing.has(c)) return c;
   }
   return `hsl(${Math.floor(Math.random() * 360)} 75% 50%)`;
-}
-
-// Preload sounds once
-const soundCache: Record<string, HTMLAudioElement> = {
-  add: new Audio("/sounds/add.mp3"),
-  remove: new Audio("/sounds/remove.mp3"),
-  win: new Audio("/sounds/win.mp3"),
-};
-
-Object.values(soundCache).forEach(audio => {
-  audio.load(); // preload
-});
-
-// Always clone for guaranteed play
-function playSound(type: keyof typeof soundCache) {
-  const audio = soundCache[type].cloneNode(true) as HTMLAudioElement;
-  audio.volume = 0.5;
-  audio.play().catch(() => {});
 }
 
 export default function FingerPickerGame(): JSX.Element {
