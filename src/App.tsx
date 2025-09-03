@@ -24,9 +24,20 @@ function randomUniqueColor(existing: Set<string>) {
   return `hsl(${Math.floor(Math.random() * 360)} 75% 50%)`;
 }
 
-// 🔊 Play sound helper
-function playSound(src: string) {
-  const audio = new Audio(src);
+// Preload sounds once
+const soundCache: Record<string, HTMLAudioElement> = {
+  add: new Audio("/sounds/add.mp3"),
+  remove: new Audio("/sounds/remove.mp3"),
+  win: new Audio("/sounds/win.mp3"),
+};
+
+Object.values(soundCache).forEach(audio => {
+  audio.load(); // preload
+});
+
+// Always clone for guaranteed play
+function playSound(type: keyof typeof soundCache) {
+  const audio = soundCache[type].cloneNode(true) as HTMLAudioElement;
   audio.volume = 0.5;
   audio.play().catch(() => {});
 }
@@ -48,7 +59,7 @@ export default function FingerPickerGame(): JSX.Element {
       } else {
         const color = randomUniqueColor(existing);
         next.set(id, { id, x: clientX, y: clientY, color, createdAt: Date.now() });
-        playSound("/sounds/add.mp3");  // 🔊 finger added
+        playSound("add");  // 🔊 finger added
       }
       return next;
     });
@@ -59,7 +70,7 @@ export default function FingerPickerGame(): JSX.Element {
       if (!prev.has(id)) return prev;
       const next = new Map(prev);
       next.delete(id);
-      if (next.size > 0) playSound("/sounds/remove.mp3");  // 🔊 finger removed
+      if (next.size > 0) playSound("remove");  // 🔊 finger removed
       return next;
     });
   }
@@ -88,14 +99,14 @@ export default function FingerPickerGame(): JSX.Element {
         const next = new Map(prev);
         next.delete(loserId);
 
-        if (next.size > 0) playSound("/sounds/remove.mp3"); // 🔊 eliminated
+        if (next.size > 0) playSound("remove"); // 🔊 eliminated
 
         if (next.size === 1) {
           const [finalId] = next.keys();
           setWinnerId(finalId);
           const f = next.get(finalId);
           if (f) {
-            playSound("/sounds/win.mp3"); // 🔊 winner
+            playSound("win"); // 🔊 winner
             // setBgColor(f.color);
           }
         }
@@ -149,7 +160,7 @@ export default function FingerPickerGame(): JSX.Element {
         eliminationTimerRef.current = null;
       }
       if (fingers.size === 0) {
-        playSound("/sounds/win.mp3"); // 🔊 winner (single player)
+        // playSound("win"); // 🔊 winner (single player)
         setWinnerId(null);
         setBgColor(DEFAULT_BG);
       }
